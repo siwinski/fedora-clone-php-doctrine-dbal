@@ -14,13 +14,18 @@
 
 Name:      php-%{github_owner}-%{github_name}
 Version:   %{github_version}
-Release:   1%{?github_release}%{?dist}
+Release:   2%{?github_release}%{?dist}
 Summary:   Doctrine Database Abstraction Layer (DBAL)
 
 Group:     Development/Libraries
 License:   MIT
 URL:       http://www.doctrine-project.org/projects/dbal.html
 Source0:   https://github.com/%{github_owner}/%{github_name}/archive/%{github_commit}/%{name}-%{github_version}-%{github_commit}.tar.gz
+# From OwnCloud. Committed upstream as
+# https://github.com/doctrine/dbal/commit/075c68b7518e27d46d7f700a1d42ebf43f6ebdfd
+# but immediately reverted in
+# https://github.com/doctrine/dbal/commit/894493b285c71a33e6ed29994ba415bad5e0a457
+Patch0:    php-doctrine-dbal-2.4.2-primary_index.patch
 
 BuildArch: noarch
 
@@ -56,6 +61,7 @@ extension under the hood.
 
 %prep
 %setup -q -n %{github_name}-%{github_commit}
+%patch0 -p3 -b .primary_index
 
 # Make a single executable
 echo '#!%{_bindir}/php' > bin/doctrine-dbal
@@ -94,6 +100,9 @@ install -pm 0755 bin/doctrine-dbal %{buildroot}/%{_bindir}/
 
 
 %changelog
+* Tue Jan 07 2014 Adam Williamson <awilliam@redhat.com> - 2.4.2-2
+- primary_index: one OwnCloud patch still isn't in upstream
+
 * Sat Jan 04 2014 Shawn Iwinski <shawn.iwinski@gmail.com> 2.4.2-1
 - Updated to 2.4.2
 - Conditional %%{?dist}
