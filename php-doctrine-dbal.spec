@@ -14,7 +14,7 @@
 
 Name:      php-%{github_owner}-%{github_name}
 Version:   %{github_version}
-Release:   2%{?github_release}%{?dist}
+Release:   3%{?github_release}%{?dist}
 Summary:   Doctrine Database Abstraction Layer (DBAL)
 
 Group:     Development/Libraries
@@ -100,6 +100,9 @@ install -pm 0755 bin/doctrine-dbal %{buildroot}/%{_bindir}/
 
 
 %changelog
+* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.4.2-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
 * Tue Jan 07 2014 Adam Williamson <awilliam@redhat.com> - 2.4.2-2
 - primary_index: one OwnCloud patch still isn't in upstream
 
