@@ -1,7 +1,22 @@
-%global github_owner   doctrine
-%global github_name    dbal
-%global github_version 2.4.2
-%global github_commit  fec965d330c958e175c39e61c3f6751955af32d0
+#
+# RPM spec file for php-doctrine-dbal
+#
+# Copyright (c) 2013-2014 Shawn Iwinski <shawn.iwinski@gmail.com>
+#                         Adam Williamson <awilliam@redhat.com>
+#
+# License: MIT
+# http://opensource.org/licenses/MIT
+#
+# Please preserve changelog entries
+#
+
+%global github_owner     doctrine
+%global github_name      dbal
+%global github_version   2.4.2
+%global github_commit    fec965d330c958e175c39e61c3f6751955af32d0
+
+%global composer_vendor  doctrine
+%global composer_project dbal
 
 # "php": ">=5.3.2"
 %global php_min_ver             5.3.2
@@ -12,9 +27,9 @@
 %global symfony_console_min_ver 2.0
 %global symfony_console_max_ver 3.0
 
-Name:      php-%{github_owner}-%{github_name}
+Name:      php-%{composer_vendor}-%{composer_project}
 Version:   %{github_version}
-Release:   3%{?github_release}%{?dist}
+Release:   4%{?github_release}%{?dist}
 Summary:   Doctrine Database Abstraction Layer (DBAL)
 
 Group:     Development/Libraries
@@ -25,15 +40,15 @@ Source0:   https://github.com/%{github_owner}/%{github_name}/archive/%{github_co
 # https://github.com/doctrine/dbal/commit/075c68b7518e27d46d7f700a1d42ebf43f6ebdfd
 # but immediately reverted in
 # https://github.com/doctrine/dbal/commit/894493b285c71a33e6ed29994ba415bad5e0a457
-Patch0:    php-doctrine-dbal-2.4.2-primary_index.patch
+Patch0:    %{name}-2.4.2-primary_index.patch
 
 BuildArch: noarch
 
-Requires:  php(language)       >= %{php_min_ver}
-Requires:  php-doctrine-common >= %{doctrine_common_min_ver}
-Requires:  php-doctrine-common <  %{doctrine_common_max_ver}
-Requires:  php-symfony-console >= %{symfony_console_min_ver}
-Requires:  php-symfony-console <  %{symfony_console_max_ver}
+Requires:  php(language)                 >= %{php_min_ver}
+Requires:  php-composer(doctrine/common) >= %{doctrine_common_min_ver}
+Requires:  php-composer(doctrine/common) <  %{doctrine_common_max_ver}
+Requires:  php-symfony-console           >= %{symfony_console_min_ver}
+Requires:  php-symfony-console           <  %{symfony_console_max_ver}
 # phpcompatinfo (computed from v2.4.2)
 Requires:  php-date
 Requires:  php-json
@@ -41,6 +56,8 @@ Requires:  php-pcre
 Requires:  php-pdo
 Requires:  php-spl
 
+# Composer
+Provides:  php-composer(%{composer_vendor}/%{composer_project}) = %{version}
 # PEAR
 Provides:  php-pear(pear.doctrine-project.org/DoctrineDBAL) = %{version}
 # Rename
@@ -60,7 +77,7 @@ extension under the hood.
 
 
 %prep
-%setup -q -n %{github_name}-%{github_commit}
+%setup -qn %{github_name}-%{github_commit}
 %patch0 -p3 -b .primary_index
 
 # Make a single executable
@@ -100,19 +117,23 @@ install -pm 0755 bin/doctrine-dbal %{buildroot}/%{_bindir}/
 
 
 %changelog
+* Fri Jun 20 2014 Shawn Iwinski <shawn.iwinski@gmail.com> - 2.4.2-4
+- Added php-composer(%%{composer_vendor}/%%{composer_project}) virtual provide
+- Updated Doctrine dependencies to use php-composer virtual provides
+
 * Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.4.2-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
 * Tue Jan 07 2014 Adam Williamson <awilliam@redhat.com> - 2.4.2-2
 - primary_index: one OwnCloud patch still isn't in upstream
 
-* Sat Jan 04 2014 Shawn Iwinski <shawn.iwinski@gmail.com> 2.4.2-1
+* Sat Jan 04 2014 Shawn Iwinski <shawn.iwinski@gmail.com> - 2.4.2-1
 - Updated to 2.4.2
 - Conditional %%{?dist}
 
-* Tue Dec 31 2013 Shawn Iwinski <shawn.iwinski@gmail.com> 2.4.1-2.20131231gitd08b11c
+* Tue Dec 31 2013 Shawn Iwinski <shawn.iwinski@gmail.com> - 2.4.1-2.20131231gitd08b11c
 - Updated to latest snapshot
 - Removed patches (pulled into latest snapshot)
 
-* Sun Dec 29 2013 Shawn Iwinski <shawn.iwinski@gmail.com> 2.4.1-1
+* Sun Dec 29 2013 Shawn Iwinski <shawn.iwinski@gmail.com> - 2.4.1-1
 - Initial package
