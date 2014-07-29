@@ -29,7 +29,7 @@
 
 Name:      php-%{composer_vendor}-%{composer_project}
 Version:   %{github_version}
-Release:   5%{?github_release}%{?dist}
+Release:   6%{?github_release}%{?dist}
 Summary:   Doctrine Database Abstraction Layer (DBAL)
 
 Group:     Development/Libraries
@@ -83,7 +83,7 @@ extension under the hood.
 %prep
 %setup -qn %{github_name}-%{github_commit}
 %patch0 -p3 -b .primary_index
-#patch1 -p1 -b .escape_column
+%patch1 -p1 -b .escape_column
 
 # Make a single executable
 echo '#!%{_bindir}/php' > bin/doctrine-dbal
@@ -122,6 +122,9 @@ install -pm 0755 bin/doctrine-dbal %{buildroot}/%{_bindir}/
 
 
 %changelog
+* Tue Jul 29 2014 Adam Williamson <awilliam@redhat.com> - 2.4.2-6
+- really apply the patch
+
 * Tue Jul 29 2014 Adam Williamson <awilliam@redhat.com> - 2.4.2-5
 - backport another OwnCloud-related pgsql fix from upstream master
 
