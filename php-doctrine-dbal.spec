@@ -12,39 +12,34 @@
 
 %global github_owner     doctrine
 %global github_name      dbal
-%global github_version   2.4.2
-%global github_commit    fec965d330c958e175c39e61c3f6751955af32d0
+# yes, upstream messed up their commit: the commit tagged with the 2.5.0
+# release tag is the one that bumps the version to 2.5.1.
+%global github_version   2.5.1
+%global github_date      20141230
+%global github_commit    dd4d1062ccd5018ee7f2bb05a54258dc839d7b1e
+%global shortcommit %(c=%{github_commit}; echo ${c:0:7})
 
 %global composer_vendor  doctrine
 %global composer_project dbal
 
 # "php": ">=5.3.2"
 %global php_min_ver             5.3.2
-# "doctrine/common": "~2.4"
+# "doctrine/common": ">=2.4,<2.6-dev"
 %global doctrine_common_min_ver 2.4
-%global doctrine_common_max_ver 3.0
-# "symfony/console": "~2.0"
+%global doctrine_common_max_ver 2.6
+# "symfony/console": "2.*"
 %global symfony_console_min_ver 2.0
 %global symfony_console_max_ver 3.0
 
 Name:      php-%{composer_vendor}-%{composer_project}
 Version:   %{github_version}
-Release:   6%{?github_release}%{?dist}
+Release:   0.1.%{github_date}git%{shortcommit}%{?dist}
 Summary:   Doctrine Database Abstraction Layer (DBAL)
 
 Group:     Development/Libraries
 License:   MIT
 URL:       http://www.doctrine-project.org/projects/dbal.html
 Source0:   https://github.com/%{github_owner}/%{github_name}/archive/%{github_commit}/%{name}-%{github_version}-%{github_commit}.tar.gz
-# From OwnCloud. Committed upstream as
-# https://github.com/doctrine/dbal/commit/075c68b7518e27d46d7f700a1d42ebf43f6ebdfd
-# but immediately reverted in
-# https://github.com/doctrine/dbal/commit/894493b285c71a33e6ed29994ba415bad5e0a457
-Patch0:    %{name}-2.4.2-primary_index.patch
-# From upstream master (2.5), not yet backported to 2.4 upstream. Required for
-# OwnCloud (pgsql-backed OC 6.x upgrades to 7.x fail without it.) Rediffed
-# https://github.com/doctrine/dbal/commit/f8c1d77efa988974026189bf8214ef0fecaf1522
-Patch1:    f8c1d77efa988974026189bf8214ef0fecaf1522.patch
 
 BuildArch: noarch
 
@@ -82,8 +77,6 @@ extension under the hood.
 
 %prep
 %setup -qn %{github_name}-%{github_commit}
-%patch0 -p3 -b .primary_index
-%patch1 -p1 -b .escape_column
 
 # Make a single executable
 echo '#!%{_bindir}/php' > bin/doctrine-dbal
@@ -112,16 +105,22 @@ install -pm 0755 bin/doctrine-dbal %{buildroot}/%{_bindir}/
 
 
 %check
-# No upstream tests provided in source
+# Upstream drops tests from distribution tarballs:
+# https://github.com/doctrine/doctrine2/pull/543
 
 
 %files
-%doc LICENSE *.md UPGRADE composer.json
+%{!?_licensedir:%global license %%doc}
+%license LICENSE
+%doc *.md composer.json
 %{_datadir}/php/Doctrine/DBAL
 %{_bindir}/doctrine-dbal
 
 
 %changelog
+* Tue Dec 30 2014 Adam Williamson <awilliam@redhat.com> - 2.5.1-0.1.20141230gitdd4d106
+- bump to 2.5 branch (with latest fixes, some of which look big)
+
 * Tue Jul 29 2014 Adam Williamson <awilliam@redhat.com> - 2.4.2-6
 - really apply the patch
 
