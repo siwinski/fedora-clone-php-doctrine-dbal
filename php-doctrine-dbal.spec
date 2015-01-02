@@ -1,7 +1,7 @@
 #
 # RPM spec file for php-doctrine-dbal
 #
-# Copyright (c) 2013-2014 Shawn Iwinski <shawn.iwinski@gmail.com>
+# Copyright (c) 2013-2015 Shawn Iwinski <shawn.iwinski@gmail.com>
 #                         Adam Williamson <awilliam@redhat.com>
 #
 # License: MIT
@@ -12,12 +12,11 @@
 
 %global github_owner     doctrine
 %global github_name      dbal
-# yes, upstream messed up their commit: the commit tagged with the 2.5.0
-# release tag is the one that bumps the version to 2.5.1.
+# Additional commits after v2.5.0 tag. Using version 2.5.1 pre-release because
+#   lib/Doctrine/DBAL/Version.php::VERSION = 2.5.1-DEV
 %global github_version   2.5.1
-%global github_date      20141230
-%global github_commit    dd4d1062ccd5018ee7f2bb05a54258dc839d7b1e
-%global shortcommit %(c=%{github_commit}; echo ${c:0:7})
+%global github_commit    185b886e57e9557c4fad7a39d118000f652b72de
+%global github_release   .20150101git%(c=%{github_commit}; echo ${c:0:7})
 
 %global composer_vendor  doctrine
 %global composer_project dbal
@@ -31,37 +30,71 @@
 %global symfony_console_min_ver 2.0
 %global symfony_console_max_ver 3.0
 
-Name:      php-%{composer_vendor}-%{composer_project}
-Version:   %{github_version}
-Release:   0.1.%{github_date}git%{shortcommit}%{?dist}
-Summary:   Doctrine Database Abstraction Layer (DBAL)
+%{!?phpdir:     %global phpdir     %{_datadir}/php}
+%{!?__phpunit:  %global __phpunit  %{_bindir}/phpunit}
 
-Group:     Development/Libraries
-License:   MIT
-URL:       http://www.doctrine-project.org/projects/dbal.html
-Source0:   https://github.com/%{github_owner}/%{github_name}/archive/%{github_commit}/%{name}-%{github_version}-%{github_commit}.tar.gz
+# Build using "--without tests" to disable tests
+%global with_tests %{?_without_tests:0}%{!?_without_tests:1}
+
+Name:          php-%{composer_vendor}-%{composer_project}
+Version:       %{github_version}
+Release:       0.2%{?github_release}%{?dist}
+Summary:       Doctrine Database Abstraction Layer (DBAL)
+
+Group:         Development/Libraries
+License:       MIT
+URL:           http://www.doctrine-project.org/projects/dbal.html
+
+# Run "php-doctrine-dbal-get-source.sh" to create source
+Source0:       %{name}-%{version}-%{github_commit}.tar.gz
+Source1:       %{name}-get-source.sh
+
+# Update bin script:
+# 1) Add she-bang
+# 2) Auto-load using Doctrine\Common\ClassLoader
+Patch0:        %{name}-bin.patch
 
 BuildArch: noarch
+%if %{with_tests}
+BuildRequires: php-phpunit-PHPUnit
+# composer.json
+BuildRequires: php(language)                 >= %{php_min_ver}
+BuildRequires: php-composer(doctrine/common) >= %{doctrine_common_min_ver}
+BuildRequires: php-composer(doctrine/common) <  %{doctrine_common_max_ver}
+# composer.json (optional)
+BuildRequires: php-symfony-console           >= %{symfony_console_min_ver}
+BuildRequires: php-symfony-console           <  %{symfony_console_max_ver}
+# phpcompatinfo (computed from version 2.5.1 commit 185b886e57e9557c4fad7a39d118000f652b72de)
+BuildRequires: php-date
+BuildRequires: php-json
+BuildRequires: php-pcre
+BuildRequires: php-pdo
+BuildRequires: php-reflection
+BuildRequires: php-spl
+%endif
 
-Requires:  php(language)                 >= %{php_min_ver}
-Requires:  php-composer(doctrine/common) >= %{doctrine_common_min_ver}
-Requires:  php-composer(doctrine/common) <  %{doctrine_common_max_ver}
-Requires:  php-symfony-console           >= %{symfony_console_min_ver}
-Requires:  php-symfony-console           <  %{symfony_console_max_ver}
-# phpcompatinfo (computed from v2.4.2)
-Requires:  php-date
-Requires:  php-json
-Requires:  php-pcre
-Requires:  php-pdo
-Requires:  php-spl
+# composer.json
+Requires:      php(language)                 >= %{php_min_ver}
+Requires:      php-composer(doctrine/common) >= %{doctrine_common_min_ver}
+Requires:      php-composer(doctrine/common) <  %{doctrine_common_max_ver}
+# composer.json (optional)
+Requires:      php-symfony-console           >= %{symfony_console_min_ver}
+Requires:      php-symfony-console           <  %{symfony_console_max_ver}
+# phpcompatinfo (computed from version 2.5.1 commit 185b886e57e9557c4fad7a39d118000f652b72de)
+Requires:      php-date
+Requires:      php-json
+Requires:      php-pcre
+Requires:      php-pdo
+Requires:      php-reflection
+Requires:      php-spl
 
 # Composer
-Provides:  php-composer(%{composer_vendor}/%{composer_project}) = %{version}
+Provides:      php-composer(%{composer_vendor}/%{composer_project}) = %{version}
 # PEAR
-Provides:  php-pear(pear.doctrine-project.org/DoctrineDBAL) = %{version}
+Provides:      php-pear(pear.doctrine-project.org/DoctrineDBAL) = %{version}
 # Rename
-Obsoletes: php-doctrine-DoctrineDBAL < %{version}
-Provides:  php-doctrine-DoctrineDBAL = %{version}
+Obsoletes:     php-doctrine-DoctrineDBAL < %{version}
+Provides:      php-doctrine-DoctrineDBAL = %{version}
 
 %description
 The Doctrine database abstraction & access layer (DBAL) offers a lightweight
@@ -78,18 +111,11 @@ extension under the hood.
 %prep
 %setup -qn %{github_name}-%{github_commit}
 
-# Make a single executable
-echo '#!%{_bindir}/php' > bin/doctrine-dbal
-sed 's#Doctrine/Common/ClassLoader.php#%{_datadir}/php/Doctrine/Common/ClassLoader.php#' \
-    bin/doctrine-dbal.php >> bin/doctrine-dbal
+# Patch bin script
+%patch0 -p1
 
 # Remove empty file
 rm -f lib/Doctrine/DBAL/README.markdown
-
-# Remove executable bits
-chmod a-x \
-    lib/Doctrine/DBAL/Types/JsonArrayType.php \
-    lib/Doctrine/DBAL/Types/SimpleArrayType.php
 
 
 %build
@@ -97,29 +123,48 @@ chmod a-x \
 
 
 %install
-mkdir -p %{buildroot}/%{_datadir}/php
-cp -rp lib/Doctrine %{buildroot}/%{_datadir}/php/
+mkdir -p %{buildroot}/%{phpdir}
+cp -rp lib/Doctrine %{buildroot}/%{phpdir}/
 
 mkdir -p %{buildroot}/%{_bindir}
-install -pm 0755 bin/doctrine-dbal %{buildroot}/%{_bindir}/
+install -pm 0755 bin/doctrine-dbal.php %{buildroot}/%{_bindir}/doctrine-dbal
 
 
 %check
-# Upstream drops tests from distribution tarballs:
-# https://github.com/doctrine/doctrine2/pull/543
+%if %{with_tests}
+# Rewrite "tests/Doctrine/Tests/TestInit.php"
+mv tests/Doctrine/Tests/TestInit.php tests/Doctrine/Tests/TestInit.php.dist
+cat > tests/Doctrine/Tests/TestInit.php <<'TEST_INIT'
+<?php
+
+spl_autoload_register(function ($class) {
+    $src = str_replace('\\', '/', $class).'.php';
+    @include_once $src;
+});
+TEST_INIT
+
+%{__phpunit} --include-path %{buildroot}%{phpdir}:./tests
+%else
+: Tests skipped
+%endif
 
 
 %files
 %{!?_licensedir:%global license %%doc}
 %license LICENSE
 %doc *.md composer.json
-%{_datadir}/php/Doctrine/DBAL
+%{phpdir}/Doctrine/DBAL
 %{_bindir}/doctrine-dbal
 
 
 %changelog
+* Fri Jan 02 2015 Shawn Iwinski <shawn.iwinski@gmail.com> - 2.5.1-0.2.20150101git185b886
+- Updated to latest snapshot
+- Fixed bin script
+- Added tests
+
 * Tue Dec 30 2014 Adam Williamson <awilliam@redhat.com> - 2.5.1-0.1.20141230gitdd4d106
-- bump to 2.5 branch (with latest fixes, some of which look big)
+- bump to 2.5 branch (with latest fixes, some of which look big; BZ #1153987)
 
 * Tue Jul 29 2014 Adam Williamson <awilliam@redhat.com> - 2.4.2-6
 - really apply the patch
