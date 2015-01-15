@@ -12,11 +12,8 @@
 
 %global github_owner     doctrine
 %global github_name      dbal
-# Additional commits after v2.5.0 tag. Using version 2.5.1 pre-release because
-#   lib/Doctrine/DBAL/Version.php::VERSION = 2.5.1-DEV
 %global github_version   2.5.1
-%global github_commit    185b886e57e9557c4fad7a39d118000f652b72de
-%global github_release   .20150101git%(c=%{github_commit}; echo ${c:0:7})
+%global github_commit    628c2256b646ae2417d44e063bce8aec5199d48d
 
 %global composer_vendor  doctrine
 %global composer_project dbal
@@ -38,7 +35,7 @@
 
 Name:          php-%{composer_vendor}-%{composer_project}
 Version:       %{github_version}
-Release:       0.2%{?github_release}%{?dist}
+Release:       1%{?github_release}%{?dist}
 Summary:       Doctrine Database Abstraction Layer (DBAL)
 
 Group:         Development/Libraries
@@ -64,7 +61,7 @@ BuildRequires: php-composer(doctrine/common) <  %{doctrine_common_max_ver}
 # composer.json (optional)
 BuildRequires: php-symfony-console           >= %{symfony_console_min_ver}
 BuildRequires: php-symfony-console           <  %{symfony_console_max_ver}
-# phpcompatinfo (computed from version 2.5.1 commit 185b886e57e9557c4fad7a39d118000f652b72de)
+# phpcompatinfo (computed from version 2.5.1)
 BuildRequires: php-date
 BuildRequires: php-json
 BuildRequires: php-pcre
@@ -80,7 +77,7 @@ Requires:      php-composer(doctrine/common) <  %{doctrine_common_max_ver}
 # composer.json (optional)
 Requires:      php-symfony-console           >= %{symfony_console_min_ver}
 Requires:      php-symfony-console           <  %{symfony_console_max_ver}
-# phpcompatinfo (computed from version 2.5.1 commit 185b886e57e9557c4fad7a39d118000f652b72de)
+# phpcompatinfo (computed from version 2.5.1)
 Requires:      php-date
 Requires:      php-json
 Requires:      php-pcre
@@ -158,6 +155,9 @@ TEST_INIT
 
 
 %changelog
+* Wed Jan 14 2015 Shawn Iwinski <shawn.iwinski@gmail.com> - 2.5.1-1
+- Updated to 2.5.1 (BZ #1153987)
+
 * Fri Jan 02 2015 Shawn Iwinski <shawn.iwinski@gmail.com> - 2.5.1-0.2.20150101git185b886
 - Updated to latest snapshot
 - Fixed bin script
